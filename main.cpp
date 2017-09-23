@@ -221,14 +221,14 @@ class ConstrainedPermutation{
 			// LOG("score_after", solution.score, "next[", solution.perm, "]", vi, vj);
 			//LOG("true_score", solution.evaluate());
 				
-			if( t % 100 == 0 ){
+			if( t % 1000 == 0 ){
 				ANALYSIS_LOG("score_incomplete", solution.real_score(), t, time_elapsed());
 			}
 
 			//assert(solution.score == solution.evaluate());
 			bool do_update = false;
 			if( score_diff == 0 ){
-				ANALYSIS_LOG("no_score_change_happen",solution.real_score(), time_elapsed());
+				// ANALYSIS_LOG("no_score_change_happen",solution.real_score(), time_elapsed());
 			}
 			if( score_diff > 0 ){
 				do_update = true;
