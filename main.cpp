@@ -52,25 +52,29 @@ namespace Timer{
 };
 using namespace Timer;
 
-#define LOG(...) log(__LINE__,__VA_ARGS__)
+#ifdef DEBUG
+	#define LOG(...) log(__LINE__,__VA_ARGS__)
+	template<class T> string unpack(const T &v){
+		stringstream ss;
+		ss << v;
+		return ss.str();	
+	}
+	template<class T, class ...Args> string unpack(const T &v, Args... args)  
+	{
+		stringstream ss;
+		ss << v << " " << unpack(args...);
+		return ss.str();  
+	} 
 
-template<class T> string unpack(const T &v){
-	stringstream ss;
-	ss << v;
-	return ss.str();	
-}
-template<class T, class ...Args> string unpack(const T &v, Args... args)  
-{
-	stringstream ss;
-	ss << v << " " << unpack(args...);
-	return ss.str();  
-} 
+	template<class ...Args> void log(int line, Args... args){
+		char time[16];
+		sprintf(time, "%2.4f", time_elapsed());
+		cerr << time << "s " << unpack(args...) << " (line " << line << ")" << endl;
+	}
+#else
+	#define LOG(...)
+#endif
 
-template<class ...Args> void log(int line, Args... args){
-	char time[16];
-	sprintf(time, "%2.4f", time_elapsed());
-	cerr << time << "s " << unpack(args...) << " (line " << line << ")" << endl;
-}
 
 struct Constraint{
 	int i,j;
@@ -139,17 +143,6 @@ public:
 	int update(int pi,int pj){
 		if( perm[pi] > perm[pj] ) return update(pj,pi);
 		assert(pi!=pj);
-		/*1 2 
-		2 3
-		
-		1 2 3
-		1 2: 1
-		2 3: 1
-
-		2 1 3
-		1 2: 0
-		2 3: 1
-		*/	
 		// LOG(vi,vj, constraints->matrix[vi][vj]);
 
 		int sum_before = partial_evaluate(pi) + partial_evaluate(pj) - constraints->matrix[pi][pj];
