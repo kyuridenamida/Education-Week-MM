@@ -260,15 +260,16 @@ class ConstrainedPermutation{
 			int vj = randxor() % solution.N();
 			if( vi == vj ) continue;
 
+			if( t % 1000 == 0 ){
+				ANALYSIS_LOG("score_incomplete", solution.real_score(), t, time_elapsed());
+			}
+
 			// LOG("score_before", solution.score, "current[", solution.perm, "]", vi, vj);
 			int score_diff = solution.update(vi,vj);
 			// LOG("score_diff", score_diff);
 			// LOG("score_after", solution.score, "next[", solution.perm, "]", vi, vj);
-			//LOG("true_score", solution.evaluate());
-				
-			if( t % 1000 == 0 ){
-				ANALYSIS_LOG("score_incomplete", solution.real_score(), t, time_elapsed());
-			}
+			// LOG("true_score", solution.evaluate());
+
 
 			//assert(solution.score == solution.evaluate());
 			bool do_update = false;
@@ -288,7 +289,7 @@ class ConstrainedPermutation{
 			}
 			if( best_solution.score < solution.score ){
 				best_solution = solution;
-				ANALYSIS_LOG("updated", t, solution.real_score(), time_elapsed());
+				ANALYSIS_LOG("updated",solution.real_score(), t, time_elapsed());
 				LOG("update!", score_diff, solution.real_score() , "(", t, ")");
 			}
 			t++;
@@ -326,6 +327,8 @@ int main(int argv, char *argc[]){
 	auto procedure = [](istream &in){
 		int N,K;
 		in >> N >> K;
+		ANALYSIS_LOG("N", N);
+		ANALYSIS_LOG("K", K);		
 		// cerr << N << endl;
 		// cerr << K << endl;
 		vector<string> constraints;
