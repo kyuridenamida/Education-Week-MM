@@ -230,8 +230,8 @@ class ConstrainedPermutation{
 		ANALYSIS_LOG("sa_start_time", time_elapsed());
 		Solution best_solution = solution;
 		
-		int metrics_last_update = 0;
-		int metrics_last_update_by_probability = 0;
+		int metrics_last_updated = 0;
+		int metrics_last_updated_by_probability = 0;
 		
 		while( t < max_t && !is_TLE(TIME_LIMIT)){
 			int vi = randxor() % constraints->get_N();
@@ -255,6 +255,7 @@ class ConstrainedPermutation{
 			}
 			if( score_diff > 0 ){
 				do_update = true;
+				metrics_last_updated_by_probability = t;
 			}else{
 				// double temprature = temprature_begin + (template_end - temprature_begin) * t / max_t;
 				// double prob = exp( score_diff / temprature);
@@ -266,11 +267,15 @@ class ConstrainedPermutation{
 			}
 			if( best_solution.score < solution.score ){
 				best_solution = solution;
-				ANALYSIS_LOG("updated",solution.real_score(), t, time_elapsed());
+				FIZZY_ANALYSIS_LOG("updated",solution.real_score(), t, time_elapsed());
 				LOG("update!", score_diff, solution.real_score() , "(", t, ")");
+				metrics_last_updated = t;
 			}
 			t++;
 		}
+		ANALYSIS_LOG("last_updated", metrics_last_updated);
+		ANALYSIS_LOG("last_updated_by_probability", metrics_last_updated_by_probability);
+		
 		ANALYSIS_LOG("final_t", t);
 		ANALYSIS_LOG("sa_finish_time", time_elapsed());
 		return best_solution;
