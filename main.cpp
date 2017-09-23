@@ -184,9 +184,6 @@ public:
 		return sum;
 	}
 
-
-	int N(){ return perm.size(); }
-
 	int update(int pi,int pj){
 		int inc = score_for_swap(pi,pj);
 		swap(perm[pi], perm[pj]);
@@ -214,32 +211,36 @@ class ConstrainedPermutation{
 	Solution initial_solution(int N){
 		vector<int> p(N);
 		for(int i = 0 ; i < N ; i++) p[i] = i;
-		for(int i = 0 ; i < 114 ; i++){
-			random_shuffle(p.begin(),p.end());
-			// cout << i 
-		}
+		random_shuffle(p.begin(),p.end());
+
 
 		return Solution(p, constraints);
 	}
 
+	double predicted_max_t(double K){
+		return 1.044e9 * pow(K,-0.398695);
+	}
+
 	Solution simulated_annealing(Solution solution){
 
-		const double temprature_begin = solution.constraints->raw.size();
+		const double temprature_begin = 10;
 		const double template_end = 0;
-		const int max_t = 10000000;
-
+		const int max_t = predicted_max_t(constraints->get_K());
 		int t = 0;
 		ANALYSIS_LOG("sa_start_time", time_elapsed());
 		Solution best_solution = solution;
+		
+		int metrics_last_update = 0;
+		int metrics_last_update_by_probability = 0;
+		
 		while( t < max_t && !is_TLE(TIME_LIMIT)){
-			int vi = randxor() % solution.N();
-			int vj = randxor() % solution.N();
+			int vi = randxor() % constraints->get_N();
+			int vj = randxor() % constraints->get_N();
 			if( vi == vj ) continue;
 
 			if( t % 1000 == 0 ){
 				FIZZY_ANALYSIS_LOG("score_incomplete", solution.real_score(), t, time_elapsed());
 			}
-
 			// LOG("score_before", solution.score, "current[", solution.perm, "]", vi, vj);
 			int score_diff = solution.update(vi,vj);
 			// LOG("score_diff", score_diff);
