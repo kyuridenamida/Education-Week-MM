@@ -2,6 +2,7 @@
 #include <cassert>
 #include <sstream>
 #include <vector>
+#include <fstream>
 #include <algorithm>
 #include <cmath>
 using namespace std;
@@ -241,24 +242,34 @@ public:
 };
 
 #ifdef LOCAL
-int main(){
-	int N,K;
-	cin >> N >> K;
-	cerr << N << endl;
-	cerr << K << endl;
-	vector<string> constraints;
-	for(int i = 0 ; i < K ; i++){
-		int vi,vj;
-		cin >> vi >> vj;
-		stringstream ss;
-		ss << vi << " " << vj;
-		constraints.push_back(ss.str());
-	}
-	auto res = ConstrainedPermutation().permute(N,constraints);
-	cerr << res << endl;
+int main(int argv, char *argc[]){
+	auto procedure = [](istream &in){
+		int N,K;
+		in >> N >> K;
+		// cerr << N << endl;
+		// cerr << K << endl;
+		vector<string> constraints;
+		for(int i = 0 ; i < K ; i++){
+			int vi,vj;
+			in >> vi >> vj;
+			stringstream ss;
+			ss << vi << " " << vj;http://qiita.com/yohm/items/450fbae1ee0aebe1261e
+			// cerr << vi << " " << vj << endl;
+			constraints.push_back(ss.str());
+		}
+		auto res = ConstrainedPermutation().permute(N,constraints);
+		// cerr << res << endl;
 
-	cout << res.size() << endl;
-	for(int i = 0 ; i < res.size() ; i++)
-		cout << res[i] << endl;
+		cout << res.size() << endl;
+		for(int i = 0 ; i < res.size() ; i++)
+			cout << res[i] << endl;
+	};
+	if( argv >= 2 ){
+		ifstream ifs(argc[1]);
+		assert(ifs.is_open());
+		procedure(ifs);
+	}else{
+		procedure(cin);
+	}
 }
 #endif
