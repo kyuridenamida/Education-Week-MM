@@ -225,7 +225,7 @@ class ConstrainedPermutation{
 
 		const double temprature_begin = 10;
 		const double template_end = 0;
-		const int max_t = predicted_max_t(constraints->get_K());
+		const int max_t = 1000000000;
 		int t = 0;
 		ANALYSIS_LOG("sa_start_time", time_elapsed());
 		Solution best_solution = solution;
