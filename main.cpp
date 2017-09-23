@@ -90,6 +90,12 @@ template<class ...Args> void log(int line, Args... args){
 	#define ANALYSIS_LOG(...)
 #endif
 
+#ifdef ENABLE_FIZZY_ANALYSIS
+	#define FIZZY_ANALYSIS_LOG(...) log(-1,"[ANALYSIS]",__VA_ARGS__)
+#else
+	#define FIZZY_ANALYSIS_LOG(...)
+#endif
+
 
 struct Constraint{
 	int i,j;
@@ -236,7 +242,7 @@ class ConstrainedPermutation{
 			if( vi == vj ) continue;
 
 			if( t % 1000 == 0 ){
-				ANALYSIS_LOG("score_incomplete", solution.real_score(), t, time_elapsed());
+				FIZZY_ANALYSIS_LOG("score_incomplete", solution.real_score(), t, time_elapsed());
 			}
 
 			// LOG("score_before", solution.score, "current[", solution.perm, "]", vi, vj);
