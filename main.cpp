@@ -185,14 +185,14 @@ class ConstrainedPermutation{
 
 	Solution simulated_annealing(Solution solution){
 
-		const double temprature_begin = solution.constraints->raw.size() / 10;
+		const double temprature_begin = solution.constraints->raw.size();
 		const double template_end = 0;
 		const int max_t = 1000000;
 
 		int t = 0;
 		
 		Solution best_solution = solution; 
-		while( t < max_t ){
+		while( t < max_t && !is_TLE(TIME_LIMIT)){
 			int vi = randxor() % solution.N();
 			int vj = randxor() % solution.N();
 			if( vi == vj ) continue;
@@ -211,9 +211,9 @@ class ConstrainedPermutation{
 			if( score_diff > 0 ){
 				do_update = true;
 			}else{
-				double temprature = temprature_begin + (template_end - temprature_begin) * t / max_t;
-				double prob = exp( score_diff / temprature);
-				do_update = randxor() < prob * RANDMAX;
+				// double temprature = temprature_begin + (template_end - temprature_begin) * t / max_t;
+				// double prob = exp( score_diff / temprature);
+				// do_update = randxor() < prob * RANDMAX;
 			}
 
 			if(!do_update){
