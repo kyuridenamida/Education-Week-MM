@@ -108,9 +108,12 @@ struct Constraint{
 
 struct Constraints {
 	vector<Constraint> raw;
-	vector< vector<int> > graph;
-	vector< vector<int> > reversed_graph;
-	vector< vector<bool> > matrix;
+	int graph[1000][1000];
+	int graph_size[1000];
+	int reversed_graph[1000][1000];
+	int reversed_graph_size[1000];
+	int matrix[1000][1000];
+	int N;
 
 	Constraints(vector<string> raw_str, int N){
 		vector<Constraint> raw;
@@ -124,15 +127,19 @@ struct Constraints {
 	}
 
 	void constructor(vector<Constraint> raw, int N){
+		this->N = N;
 		this->raw = raw;
-		graph.resize(N);
-		reversed_graph.resize(N);
-		matrix = vector< vector<bool> >(N,vector<bool>(N));
 		for( auto && c : raw ){
-			graph[c.i].push_back(c.j);
-			reversed_graph[c.j].push_back(c.i);
-			matrix[c.i][c.j] = true;
+			graph[c.i][graph_size[c.i]++] = c.j;
+			reversed_graph[c.j][reversed_graph_size[c.j]++] = c.i;
+			matrix[c.i][c.j] = 1;
 		}
+	}
+	int get_N(){
+		return N; 
+	}
+	int get_K(){
+		return raw.size(); 
 	}
 };
 
@@ -151,36 +158,24 @@ public:
 		score = evaluate();
 	}
 
-	int partial_evaluate(int pi){
-		int sum = 0;
-		for(int i = 0 ; i < constraints->graph[pi].size() ; i++){
-			if( perm[pi] < perm[constraints->graph[pi][i]] ) sum++;
-		}
-		
-		for(int i = 0 ; i < constraints->reversed_graph[pi].size() ; i++){
-			if( perm[constraints->reversed_graph[pi][i]] < perm[pi] ) sum++;
-		}
-		return sum;
-	}
-
 	int score_for_swap(int pi,int pj){
 		if( perm[pi] > perm[pj] ) swap(pi,pj);
 		assert(perm[pi] < perm[pj]);
 
 		int sum = 0;
-		for(int i = 0 ; i < constraints->graph[pi].size() ; i++){
+		for(int i = 0 ; i < constraints->graph_size[pi] ; i++){
 			if( perm[pi] < perm[constraints->graph[pi][i]] ) sum--;
 			if( perm[pj] < perm[constraints->graph[pi][i]] ) sum++;
 		}
-		for(int i = 0 ; i < constraints->graph[pj].size() ; i++){
+		for(int i = 0 ; i < constraints->graph_size[pj] ; i++){
 			if( perm[pj] < perm[constraints->graph[pj][i]] ) sum--;
 			if( perm[pi] < perm[constraints->graph[pj][i]] ) sum++;
 		}
-		for(int i = 0 ; i < constraints->reversed_graph[pi].size() ; i++){
+		for(int i = 0 ; i < constraints->reversed_graph_size[pi] ; i++){
 			if( perm[constraints->reversed_graph[pi][i]] < perm[pi] ) sum--;
 			if( perm[constraints->reversed_graph[pi][i]] < perm[pj] ) sum++;
 		}
-		for(int i = 0 ; i < constraints->reversed_graph[pj].size() ; i++){
+		for(int i = 0 ; i < constraints->reversed_graph_size[pj] ; i++){
 			if( perm[constraints->reversed_graph[pj][i]] < perm[pj] ) sum--;
 			if( perm[constraints->reversed_graph[pj][i]] < perm[pi] ) sum++;
 		}
