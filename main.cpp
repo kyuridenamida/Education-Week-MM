@@ -156,21 +156,66 @@ public:
 		}
 		return sum;
 	}
+
+	int incremental_update(int pi,int pj){
+		if( perm[pi] > perm[pj] ) swap(pi,pj);
+		assert(pi!=pj);
+
+		int sum = 0;
+		LOG(pi,pj);
+		for(int i = 0 ; i < constraints->graph[pi].size() ; i++){
+			if( perm[pi] < perm[constraints->graph[pi][i]] ) sum--;
+		}
+		for(int i = 0 ; i < constraints->reversed_graph[pi].size() ; i++){
+			if( perm[constraints->reversed_graph[pi][i]] < perm[pi] ) sum--;
+		}
+		for(int i = 0 ; i < constraints->graph[pj].size() ; i++){
+			if( perm[pj] < perm[constraints->graph[pj][i]] ) sum--;
+		}
+		for(int i = 0 ; i < constraints->reversed_graph[pj].size() ; i++){
+			if( perm[constraints->reversed_graph[pj][i]] < perm[pj] ) sum--;
+		}
+		LOG(sum);
+
+
+		// after
+		for(int i = 0 ; i < constraints->graph[pi].size() ; i++){
+			if( perm[pj] < perm[constraints->graph[pi][i]] ) sum++;
+		}
+		if(constraints->matrix[pi][pj]){
+			sum += perm[pj] < perm[pi];
+		}
+		for(int i = 0 ; i < constraints->reversed_graph[pi].size() ; i++){
+			if( perm[constraints->reversed_graph[pi][i]] < perm[pj] ) sum++;
+		}
+		if(constraints->matrix[pj][pi]){
+			sum += perm[pi] < perm[pj];
+		}
+		for(int i = 0 ; i < constraints->graph[pj].size() ; i++){
+			if( perm[pi] < perm[constraints->graph[pj][i]] ) sum++;
+		}
+		if(constraints->matrix[pj][pi]){
+			sum += perm[pi] < perm[pj];
+		}
+		for(int i = 0 ; i < constraints->reversed_graph[pj].size() ; i++){
+			if( perm[constraints->reversed_graph[pj][i]] < perm[pi] ) sum++;
+		}
+		if(constraints->matrix[pi][pj]){
+			sum += perm[pj] < perm[pi];
+		}
+		sum += constraints->matrix[pi][pj];
+		sum -= constraints->matrix[pj][pi];
+		return sum;
+	}
+
+
 	int N(){ return perm.size(); }
 
 	int update(int pi,int pj){
-		if( perm[pi] > perm[pj] ) return update(pj,pi);
-		assert(pi!=pj);
-		// LOG(vi,vj, constraints->matrix[vi][vj]);
-
-		int sum_before = partial_evaluate(pi) + partial_evaluate(pj) - constraints->matrix[pi][pj];
-		// LOG(sum_before, "before");
+		int inc = incremental_update(pi,pj);
 		swap(perm[pi], perm[pj]);
-		assert(perm[pj] < perm[pi]);
-		int sum_after = partial_evaluate(pi) + partial_evaluate(pj) - constraints->matrix[pj][pi];
-		// LOG(sum_after, "after");
-		score += sum_after - sum_before;;
-		return (sum_after - sum_before);
+		score += inc;
+		return inc;
 	}
 
 	void revert(int pi,int pj,int previous_score_diff){
