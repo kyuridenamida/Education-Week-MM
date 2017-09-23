@@ -190,7 +190,7 @@ class ConstrainedPermutation{
 
 		const double temprature_begin = solution.constraints->raw.size();
 		const double template_end = 0;
-		const int max_t = 1000000;
+		const int max_t = 10000000;
 
 		int t = 0;
 		
