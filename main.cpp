@@ -255,7 +255,7 @@ int main(int argv, char *argc[]){
 			int vi,vj;
 			in >> vi >> vj;
 			stringstream ss;
-			ss << vi << " " << vj;http://qiita.com/yohm/items/450fbae1ee0aebe1261e
+			ss << vi << " " << vj;
 			// cerr << vi << " " << vj << endl;
 			constraints.push_back(ss.str());
 		}
