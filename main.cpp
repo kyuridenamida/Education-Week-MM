@@ -157,54 +157,29 @@ public:
 		return sum;
 	}
 
-	int incremental_update(int pi,int pj){
+	int score_for_swap(int pi,int pj){
 		if( perm[pi] > perm[pj] ) swap(pi,pj);
-		assert(pi!=pj);
+		assert(perm[pi] < perm[pj]);
 
 		int sum = 0;
-		LOG(pi,pj);
 		for(int i = 0 ; i < constraints->graph[pi].size() ; i++){
 			if( perm[pi] < perm[constraints->graph[pi][i]] ) sum--;
-		}
-		for(int i = 0 ; i < constraints->reversed_graph[pi].size() ; i++){
-			if( perm[constraints->reversed_graph[pi][i]] < perm[pi] ) sum--;
+			if( perm[pj] < perm[constraints->graph[pi][i]] ) sum++;
 		}
 		for(int i = 0 ; i < constraints->graph[pj].size() ; i++){
 			if( perm[pj] < perm[constraints->graph[pj][i]] ) sum--;
+			if( perm[pi] < perm[constraints->graph[pj][i]] ) sum++;
+		}
+		for(int i = 0 ; i < constraints->reversed_graph[pi].size() ; i++){
+			if( perm[constraints->reversed_graph[pi][i]] < perm[pi] ) sum--;
+			if( perm[constraints->reversed_graph[pi][i]] < perm[pj] ) sum++;
 		}
 		for(int i = 0 ; i < constraints->reversed_graph[pj].size() ; i++){
 			if( perm[constraints->reversed_graph[pj][i]] < perm[pj] ) sum--;
-		}
-		LOG(sum);
-
-
-		// after
-		for(int i = 0 ; i < constraints->graph[pi].size() ; i++){
-			if( perm[pj] < perm[constraints->graph[pi][i]] ) sum++;
-		}
-		if(constraints->matrix[pi][pj]){
-			sum += perm[pj] < perm[pi];
-		}
-		for(int i = 0 ; i < constraints->reversed_graph[pi].size() ; i++){
-			if( perm[constraints->reversed_graph[pi][i]] < perm[pj] ) sum++;
-		}
-		if(constraints->matrix[pj][pi]){
-			sum += perm[pi] < perm[pj];
-		}
-		for(int i = 0 ; i < constraints->graph[pj].size() ; i++){
-			if( perm[pi] < perm[constraints->graph[pj][i]] ) sum++;
-		}
-		if(constraints->matrix[pj][pi]){
-			sum += perm[pi] < perm[pj];
-		}
-		for(int i = 0 ; i < constraints->reversed_graph[pj].size() ; i++){
 			if( perm[constraints->reversed_graph[pj][i]] < perm[pi] ) sum++;
 		}
-		if(constraints->matrix[pi][pj]){
-			sum += perm[pj] < perm[pi];
-		}
+		sum += constraints->matrix[pj][pi];
 		sum += constraints->matrix[pi][pj];
-		sum -= constraints->matrix[pj][pi];
 		return sum;
 	}
 
@@ -212,7 +187,7 @@ public:
 	int N(){ return perm.size(); }
 
 	int update(int pi,int pj){
-		int inc = incremental_update(pi,pj);
+		int inc = score_for_swap(pi,pj);
 		swap(perm[pi], perm[pj]);
 		score += inc;
 		return inc;
