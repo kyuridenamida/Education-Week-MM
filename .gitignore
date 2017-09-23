@@ -1,2 +1,5 @@
 *.class
 *.out
+log/
+output/
+test_inputs/
