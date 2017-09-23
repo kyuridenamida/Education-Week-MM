@@ -74,6 +74,8 @@ using namespace Timer;
 	}
 #else
 	#define LOG(...)
+	#undef assert
+	#define assert(x)
 #endif
 
 
@@ -205,7 +207,7 @@ class ConstrainedPermutation{
 			//LOG("true_score", solution.evaluate());
 				
 
-			assert(solution.score == solution.evaluate());
+			//assert(solution.score == solution.evaluate());
 			bool do_update = false;
 
 			if( score_diff == 0 ) LOG("no changed score", 1.0 * solution.score / solution.constraints->raw.size() , "(", t, ")");
