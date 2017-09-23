@@ -53,29 +53,41 @@ namespace Timer{
 };
 using namespace Timer;
 
+
+template<class T> string unpack(const T &v){
+	stringstream ss;
+	ss << v;
+	return ss.str();	
+}
+template<class T, class ...Args> string unpack(const T &v, Args... args)  
+{
+	stringstream ss;
+	ss << v << " " << unpack(args...);
+	return ss.str();  
+} 
+
+template<class ...Args> void log(int line, Args... args){
+	char time[16];
+	sprintf(time, "%2.4f", time_elapsed());
+	cerr << time << "s " << unpack(args...);
+	if( line >= 0 ){
+		cerr << " (line " << line << ")";
+	}
+	cerr << endl;
+}
+
 #ifdef DEBUG
 	#define LOG(...) log(__LINE__,__VA_ARGS__)
-	template<class T> string unpack(const T &v){
-		stringstream ss;
-		ss << v;
-		return ss.str();	
-	}
-	template<class T, class ...Args> string unpack(const T &v, Args... args)  
-	{
-		stringstream ss;
-		ss << v << " " << unpack(args...);
-		return ss.str();  
-	} 
-
-	template<class ...Args> void log(int line, Args... args){
-		char time[16];
-		sprintf(time, "%2.4f", time_elapsed());
-		cerr << time << "s " << unpack(args...) << " (line " << line << ")" << endl;
-	}
 #else
 	#define LOG(...)
 	#undef assert
 	#define assert(x)
+#endif
+
+#ifdef ANALYSIS
+	#define ANALYSIS_LOG(...) log(-1,"[ANALYSIS]",__VA_ARGS__)
+#else
+	#define ANALYSIS_LOG(...)
 #endif
 
 
@@ -126,6 +138,9 @@ public:
 	Constraints *constraints;
 	int score;
 
+	int real_score(){
+		return 1000000 * score / constraints->raw.size(); 
+	}
 	Solution(vector<int> perm, Constraints *constraints) : perm(perm), constraints(constraints){
 		score = evaluate();
 	}
@@ -193,8 +208,8 @@ class ConstrainedPermutation{
 		const int max_t = 10000000;
 
 		int t = 0;
-		
-		Solution best_solution = solution; 
+		ANALYSIS_LOG("sa_start_time", time_elapsed());
+		Solution best_solution = solution;
 		while( t < max_t && !is_TLE(TIME_LIMIT)){
 			int vi = randxor() % solution.N();
 			int vj = randxor() % solution.N();
@@ -206,11 +221,15 @@ class ConstrainedPermutation{
 			// LOG("score_after", solution.score, "next[", solution.perm, "]", vi, vj);
 			//LOG("true_score", solution.evaluate());
 				
+			if( t % 100 == 0 ){
+				ANALYSIS_LOG("score_incomplete", solution.real_score(), t, time_elapsed());
+			}
 
 			//assert(solution.score == solution.evaluate());
 			bool do_update = false;
-
-			if( score_diff == 0 ) LOG("no changed score", 1.0 * solution.score / solution.constraints->raw.size() , "(", t, ")");
+			if( score_diff == 0 ){
+				ANALYSIS_LOG("no_score_change_happen",solution.real_score(), time_elapsed());
+			}
 			if( score_diff > 0 ){
 				do_update = true;
 			}else{
@@ -224,10 +243,13 @@ class ConstrainedPermutation{
 			}
 			if( best_solution.score < solution.score ){
 				best_solution = solution;
-				LOG("update!", score_diff, 1.0 * solution.score / solution.constraints->raw.size() , "(", t, ")");
+				ANALYSIS_LOG("updated", t, solution.real_score(), time_elapsed());
+				LOG("update!", score_diff, solution.real_score() , "(", t, ")");
 			}
 			t++;
 		}
+		ANALYSIS_LOG("final_t", t);
+		ANALYSIS_LOG("sa_finish_time", time_elapsed());
 		return best_solution;
 	}
 
@@ -237,7 +259,9 @@ public:
 		reset_timer();
 		constraints = new Constraints(constraints_str, N);
 		auto solution = initial_solution(N);
-		return simulated_annealing(solution).perm;
+		auto res = simulated_annealing(solution);
+		ANALYSIS_LOG("final_score", res.real_score());
+		return res.perm;
 	}
 
 
@@ -245,6 +269,15 @@ public:
 
 #ifdef LOCAL
 int main(int argv, char *argc[]){
+	reset_timer(); // bad code
+	ANALYSIS_LOG("compiled_datetime", __DATE__, __TIME__, "CDT");
+	ANALYSIS_LOG("sourcefile_name", __FILE__);
+	ANALYSIS_LOG("compiler_version", __VERSION__);
+	ANALYSIS_LOG("program_name", argc[0]);
+	if( argv >= 2 )
+		ANALYSIS_LOG("file_name", argc[1]);
+	else
+		ANALYSIS_LOG("file_name", "stdin");
 	auto procedure = [](istream &in){
 		int N,K;
 		in >> N >> K;
@@ -262,9 +295,11 @@ int main(int argv, char *argc[]){
 		auto res = ConstrainedPermutation().permute(N,constraints);
 		// cerr << res << endl;
 
-		cout << res.size() << endl;
-		for(int i = 0 ; i < res.size() ; i++)
-			cout << res[i] << endl;
+		#ifndef NO_OUTPUT
+			cout << res.size() << endl;
+			for(int i = 0 ; i < res.size() ; i++)
+				cout << res[i] << endl;
+		#endif
 	};
 	if( argv >= 2 ){
 		ifstream ifs(argc[1]);
