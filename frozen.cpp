@@ -251,13 +251,6 @@ class ConstrainedPermutation {
       if (score_diff >= 0) {
         do_update = true;
       } else {
-        double diff_double = 1.0 * score_diff / constraints->get_K();
-        double temprature =
-            temprature_begin + (template_end - temprature_begin) * t / max_t;
-        double prob = exp(diff_double / temprature);
-        do_update = randxor() < prob * RANDMAX;
-
-        metrics_last_updated_by_probability = t;
       }
 
       if (!do_update) {
