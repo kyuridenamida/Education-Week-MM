@@ -152,7 +152,7 @@ public:
 	int score;
 
 	int real_score(){
-		return 1000000 * score / constraints->raw.size(); 
+		return (int)(1000000ll * score / constraints->raw.size()); 
 	}
 	Solution(vector<int> perm, Constraints *constraints) : perm(perm), constraints(constraints){
 		score = evaluate();
