@@ -144,56 +144,55 @@ public:
   Constraints *constraints;
   int score;
 
-  int real_score() { return 1000000 * score / constraints->raw.size(); }
+  vector<int> output() {
+    int N = perm.size();
+    vector<pair<int, int>> height(N);
+    for (int i = 0; i < N; i++)
+      height[i] = make_pair(perm[i], i);
+
+    sort(height.begin(), height.end());
+
+    vector<int> p(N);
+    for (int i = 0; i < N; i++)
+      p[height[i].second] = i;
+
+    return p;
+  }
+
+  int real_score() {
+    return (int)(1000000ll * score / constraints->raw.size());
+  }
   Solution(vector<int> perm, Constraints *constraints)
       : perm(perm), constraints(constraints) {
     score = evaluate();
   }
 
-  int score_for_swap(int pi, int pj) {
-    if (perm[pi] > perm[pj])
-      swap(pi, pj);
-    assert(perm[pi] < perm[pj]);
-
+  int score_for_change(int pi, int new_value) {
     int sum = 0;
     for (int i = 0; i < constraints->graph_size[pi]; i++) {
       if (perm[pi] < perm[constraints->graph[pi][i]])
         sum--;
-      if (perm[pj] < perm[constraints->graph[pi][i]])
-        sum++;
-    }
-    for (int i = 0; i < constraints->graph_size[pj]; i++) {
-      if (perm[pj] < perm[constraints->graph[pj][i]])
-        sum--;
-      if (perm[pi] < perm[constraints->graph[pj][i]])
+      if (new_value < perm[constraints->graph[pi][i]])
         sum++;
     }
     for (int i = 0; i < constraints->reversed_graph_size[pi]; i++) {
       if (perm[constraints->reversed_graph[pi][i]] < perm[pi])
         sum--;
-      if (perm[constraints->reversed_graph[pi][i]] < perm[pj])
+      if (perm[constraints->reversed_graph[pi][i]] < new_value)
         sum++;
     }
-    for (int i = 0; i < constraints->reversed_graph_size[pj]; i++) {
-      if (perm[constraints->reversed_graph[pj][i]] < perm[pj])
-        sum--;
-      if (perm[constraints->reversed_graph[pj][i]] < perm[pi])
-        sum++;
-    }
-    sum += constraints->matrix[pj][pi];
-    sum += constraints->matrix[pi][pj];
     return sum;
   }
 
-  int update(int pi, int pj) {
-    int inc = score_for_swap(pi, pj);
-    swap(perm[pi], perm[pj]);
+  int update(int pi, int new_value) {
+    int inc = score_for_change(pi, new_value);
+    perm[pi] = new_value;
     score += inc;
     return inc;
   }
 
-  void revert(int pi, int pj, int previous_score_diff) {
-    swap(perm[pi], perm[pj]);
+  void revert(int pi, int prev_value, int previous_score_diff) {
+    perm[pi] = prev_value;
     score -= previous_score_diff;
   }
 
@@ -211,8 +210,12 @@ class ConstrainedPermutation {
 
   Solution initial_solution(int N) {
     vector<pair<int, int>> height(N);
-    for (int i = 0; i < N; i++)
+    vector<int> random_array(N);
+    for (int i = 0; i < N; i++) {
       height[i].second = i;
+      random_array[i] = randxor();
+    }
+    sort(random_array.begin(), random_array.end());
 
     for (int i = 0; i < constraints->raw.size(); i++) {
       height[constraints->raw[i].j].first++;
@@ -221,7 +224,7 @@ class ConstrainedPermutation {
 
     vector<int> p(N);
     for (int i = 0; i < N; i++)
-      p[height[i].second] = i;
+      p[height[i].second] = random_array[i];
 
     return Solution(p, constraints);
   }
@@ -242,17 +245,16 @@ class ConstrainedPermutation {
     int metrics_last_updated_by_probability = 0;
 
     while (!is_TLE(TIME_LIMIT)) {
-      int vi = randxor() % constraints->get_N();
-      int vj = randxor() % constraints->get_N();
-      if (vi == vj)
-        continue;
+      int pi = randxor() % constraints->get_N();
+      int new_value = randxor();
+      int prev_value = solution.perm[pi];
 
       if (t % 1000 == 0) {
         FIZZY_ANALYSIS_LOG("score_incomplete", solution.real_score(), t,
                            time_elapsed());
       }
 
-      int score_diff = solution.update(vi, vj);
+      int score_diff = solution.update(pi, new_value);
 
       bool do_update = false;
       if (score_diff == 0) {
@@ -263,12 +265,13 @@ class ConstrainedPermutation {
       }
 
       if (!do_update) {
-        solution.revert(vi, vj, score_diff);
+        solution.revert(pi, prev_value, score_diff);
       }
       if (best_solution.score < solution.score) {
         best_solution = solution;
         FIZZY_ANALYSIS_LOG("updated", solution.real_score(), t, time_elapsed());
-        LOG("update!", score_diff, solution.real_score(), "(", t, ")");
+        LOG("update!", score_diff, solution.score, constraints->get_K(),
+            solution.real_score(), "(", t, ")");
         metrics_last_updated = t;
       }
       t++;
@@ -290,7 +293,7 @@ public:
     auto solution = initial_solution(N);
     auto res = simulated_annealing(solution);
     ANALYSIS_LOG("final_score", res.real_score());
-    return res.perm;
+    return res.output();
   }
 };
 
