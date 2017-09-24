@@ -213,7 +213,6 @@ class ConstrainedPermutation {
     vector<int> p(N);
     for (int i = 0; i < N; i++)
       p[i] = i;
-    random_shuffle(p.begin(), p.end());
 
     return Solution(p, constraints);
   }
@@ -222,9 +221,10 @@ class ConstrainedPermutation {
 
   Solution simulated_annealing(Solution solution) {
 
-    const double temprature_begin = 10;
+    const double temprature_begin = 0.00001;
     const double template_end = 0;
-    const int max_t = 1000000000;
+    const int max_t = predicted_max_t(constraints->get_K());
+    ANALYSIS_LOG("max_t", max_t);
     int t = 0;
     ANALYSIS_LOG("sa_start_time", time_elapsed());
     Solution best_solution = solution;
@@ -232,7 +232,7 @@ class ConstrainedPermutation {
     int metrics_last_updated = 0;
     int metrics_last_updated_by_probability = 0;
 
-    while (t < max_t && !is_TLE(TIME_LIMIT)) {
+    while (!is_TLE(TIME_LIMIT)) {
       int vi = randxor() % constraints->get_N();
       int vj = randxor() % constraints->get_N();
       if (vi == vj)
@@ -248,10 +248,16 @@ class ConstrainedPermutation {
       bool do_update = false;
       if (score_diff == 0) {
       }
-      if (score_diff > 0) {
+      if (score_diff >= 0) {
         do_update = true;
-        metrics_last_updated_by_probability = t;
       } else {
+        double diff_double = 1.0 * score_diff / constraints->get_K();
+        double temprature =
+            temprature_begin + (template_end - temprature_begin) * t / max_t;
+        double prob = exp(diff_double / temprature);
+        do_update = randxor() < prob * RANDMAX;
+
+        metrics_last_updated_by_probability = t;
       }
 
       if (!do_update) {
@@ -302,14 +308,12 @@ int main(int argv, char *argc[]) {
     in >> N >> K;
     ANALYSIS_LOG("N", N);
     ANALYSIS_LOG("K", K);
-
     vector<string> constraints;
     for (int i = 0; i < K; i++) {
       int vi, vj;
       in >> vi >> vj;
       stringstream ss;
       ss << vi << " " << vj;
-
       constraints.push_back(ss.str());
     }
     auto res = ConstrainedPermutation().permute(N, constraints);
