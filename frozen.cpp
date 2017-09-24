@@ -210,9 +210,18 @@ class ConstrainedPermutation {
   Constraints *constraints;
 
   Solution initial_solution(int N) {
+    vector<pair<int, int>> height(N);
+    for (int i = 0; i < N; i++)
+      height[i].second = i;
+
+    for (int i = 0; i < constraints->raw.size(); i++) {
+      height[constraints->raw[i].j].first++;
+    }
+    sort(height.begin(), height.end());
+
     vector<int> p(N);
     for (int i = 0; i < N; i++)
-      p[i] = i;
+      p[height[i].second] = i;
 
     return Solution(p, constraints);
   }
