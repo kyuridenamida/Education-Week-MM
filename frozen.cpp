@@ -8,7 +8,7 @@
 using namespace std;
 
 const int INF = 12345;
-const double TIME_LIMIT = 9.75 * 3;
+const double TIME_LIMIT = 9.75;
 
 const unsigned int RANDMAX = -1;
 
@@ -31,7 +31,7 @@ template <class T> ostream &operator<<(ostream &os, const vector<T> &v) {
 
 namespace Timer {
 bool is_started = false;
-unsigned long long int cycle_per_sec = 2800000000;
+unsigned long long int cycle_per_sec = 2700000000;
 unsigned long long int beginCycle;
 unsigned long long int get_cycle() {
   unsigned int low, high;
@@ -137,6 +137,14 @@ struct Constraints {
   int get_K() { return raw.size(); }
 };
 
+struct WeightedRange {
+  int left, right;
+  int weight;
+  WeightedRange(int left, int right, int weight)
+      : left(left), right(right), weight(weight) {}
+  bool operator<(const WeightedRange &op) const { return weight < op.weight; }
+};
+
 struct Solution {
 public:
   vector<int> perm;
@@ -196,6 +204,34 @@ public:
     score -= previous_score_diff;
   }
 
+  WeightedRange best_range(int pi) {
+    if (constraints->graph_size[pi] + constraints->reversed_graph_size[pi] ==
+        0) {
+      return WeightedRange(-INT_MIN, INT_MAX, 0);
+    }
+
+    vector<pair<int, int>> items;
+    for (int i = 0; i < constraints->graph_size[pi]; i++) {
+      items.push_back({perm[constraints->graph[pi][i]], -1});
+    }
+    for (int i = 0; i < constraints->reversed_graph_size[pi]; i++) {
+      items.push_back({perm[constraints->reversed_graph[pi][i]] + 1, +1});
+    }
+    sort(items.begin(), items.end());
+    int sum = constraints->graph_size[pi];
+    WeightedRange res = WeightedRange(INT_MIN, items[0].first, sum);
+    for (int i = 0; i < items.size(); i++) {
+      sum += items[i].second;
+      if (res.weight < sum) {
+        res = WeightedRange(items[i].first,
+                            i + 1 < items.size() ? items[i + 1].first : INT_MAX,
+                            sum);
+      }
+    }
+
+    return res;
+  }
+
   int evaluate() {
     int ans = 0;
     for (auto &&c : constraints->raw) {
@@ -231,10 +267,51 @@ class ConstrainedPermutation {
 
   double predicted_max_t(double K) { return 1.044e9 * pow(K, -0.398695); }
 
+  Solution hill_climbing(Solution solution) {
+    int t = 0;
+    ANALYSIS_LOG("hc_start_time", time_elapsed());
+    Solution best_solution = solution;
+    int fail_count = 0;
+    while (!is_TLE(TIME_LIMIT) && fail_count < constraints->get_N()) {
+      int pi = t % constraints->get_N();
+      int prev_value = solution.perm[pi];
+      WeightedRange best_value_range = solution.best_range(pi);
+      int new_value =
+          randxor() % (best_value_range.right - best_value_range.left) +
+          best_value_range.left;
+
+      if (t % 1000 == 0) {
+        FIZZY_ANALYSIS_LOG("hc_score_incomplete", solution.real_score(), t,
+                           time_elapsed());
+      }
+
+      int score_diff = solution.update(pi, new_value);
+
+      if (score_diff > 0) {
+        if (best_solution.score < solution.score) {
+          best_solution = solution;
+          FIZZY_ANALYSIS_LOG("hc_updated", solution.real_score(), t,
+                             time_elapsed());
+          LOG("hc_update!", score_diff, solution.score, constraints->get_K(),
+              solution.real_score(), "(", t, ")");
+        }
+        fail_count = 0;
+      } else {
+        fail_count++;
+        solution.revert(pi, prev_value, score_diff);
+      }
+      t++;
+    }
+    ANALYSIS_LOG("final_t", t);
+    ANALYSIS_LOG("hc_finish_time", time_elapsed());
+    return best_solution;
+  }
+
   Solution simulated_annealing(Solution solution) {
 
     const double temprature_begin = 0.00001;
     const double template_end = 0;
+
     const int max_t = predicted_max_t(constraints->get_K());
     ANALYSIS_LOG("max_t", max_t);
     int t = 0;
@@ -248,6 +325,13 @@ class ConstrainedPermutation {
       int pi = randxor() % constraints->get_N();
       int new_value = randxor();
       int prev_value = solution.perm[pi];
+
+      auto res = solution.best_range(pi);
+      {
+        int random_value = randxor() % (res.right - res.left) + res.left;
+
+        new_value = random_value;
+      }
 
       if (t % 1000 == 0) {
         FIZZY_ANALYSIS_LOG("score_incomplete", solution.real_score(), t,
@@ -291,7 +375,8 @@ public:
     reset_timer();
     constraints = new Constraints(constraints_str, N);
     auto solution = initial_solution(N);
-    auto res = simulated_annealing(solution);
+
+    auto res = hill_climbing(solution);
     ANALYSIS_LOG("final_score", res.real_score());
     return res.output();
   }
