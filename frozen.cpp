@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <climits>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -31,7 +32,7 @@ template <class T> ostream &operator<<(ostream &os, const vector<T> &v) {
 
 namespace Timer {
 bool is_started = false;
-unsigned long long int cycle_per_sec = 2700000000;
+unsigned long long int cycle_per_sec = 2800000000;
 unsigned long long int beginCycle;
 unsigned long long int get_cycle() {
   unsigned int low, high;
@@ -302,15 +303,15 @@ class ConstrainedPermutation {
       }
       t++;
     }
-    ANALYSIS_LOG("final_t", t);
+    ANALYSIS_LOG("hc_final_t", t);
     ANALYSIS_LOG("hc_finish_time", time_elapsed());
     return best_solution;
   }
 
   Solution simulated_annealing(Solution solution) {
 
-    const double temprature_begin = 0.00001;
-    const double template_end = 0;
+    const double temprature_begin = 0.2;
+    const double template_end = 0.1;
 
     const int max_t = predicted_max_t(constraints->get_K());
     ANALYSIS_LOG("max_t", max_t);
@@ -326,13 +327,6 @@ class ConstrainedPermutation {
       int new_value = randxor();
       int prev_value = solution.perm[pi];
 
-      auto res = solution.best_range(pi);
-      {
-        int random_value = randxor() % (res.right - res.left) + res.left;
-
-        new_value = random_value;
-      }
-
       if (t % 1000 == 0) {
         FIZZY_ANALYSIS_LOG("score_incomplete", solution.real_score(), t,
                            time_elapsed());
@@ -346,6 +340,14 @@ class ConstrainedPermutation {
       if (score_diff >= 0) {
         do_update = true;
       } else {
+        double diff_double = 1.0 * score_diff;
+        double temprature =
+            temprature_begin +
+            (template_end - temprature_begin) * time_elapsed() / TIME_LIMIT;
+        double prob = exp(diff_double / temprature);
+        do_update = randxor() < prob * RANDMAX;
+
+        metrics_last_updated_by_probability = t;
       }
 
       if (!do_update) {
@@ -375,10 +377,10 @@ public:
     reset_timer();
     constraints = new Constraints(constraints_str, N);
     auto solution = initial_solution(N);
-
-    auto res = hill_climbing(solution);
-    ANALYSIS_LOG("final_score", res.real_score());
-    return res.output();
+    solution = hill_climbing(solution);
+    solution = simulated_annealing(solution);
+    ANALYSIS_LOG("final_score", solution.real_score());
+    return solution.output();
   }
 };
 
