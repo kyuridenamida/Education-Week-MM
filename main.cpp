@@ -301,15 +301,15 @@ class ConstrainedPermutation{
 			}
 			t++;
 		}
-		ANALYSIS_LOG("final_t", t);
+		ANALYSIS_LOG("hc_final_t", t);
 		ANALYSIS_LOG("hc_finish_time", time_elapsed());
 		return best_solution;
 	}
 
 	Solution simulated_annealing(Solution solution){
 
-		const double temprature_begin = 0.00001;
-		const double template_end = 0;
+		const double temprature_begin = 0.2;
+		const double template_end = 0.1;
 
 		const int max_t = predicted_max_t(constraints->get_K());
 		ANALYSIS_LOG("max_t", max_t);
@@ -325,13 +325,6 @@ class ConstrainedPermutation{
 			int new_value = randxor();
 			int prev_value = solution.perm[pi];
 
-			auto res = solution.best_range(pi);
-			{
-				int random_value = randxor() % (res.right - res.left) + res.left;
-				// LOG("best_choice", res.left, res.right, res.weight, solution.score_for_change(pi , random_value));
-				new_value = random_value;
-			}
-
 			if( t % 1000 == 0 ){
 				FIZZY_ANALYSIS_LOG("score_incomplete", solution.real_score(), t, time_elapsed());
 			}
@@ -341,7 +334,6 @@ class ConstrainedPermutation{
 			// LOG("score_after", solution.score, "next[", solution.perm, "]", vi, vj);
 			// LOG("true_score", solution.evaluate());
 
-
 			// assert(solution.score == solution.evaluate());
 			bool do_update = false;
 			if( score_diff == 0 ){
@@ -350,12 +342,12 @@ class ConstrainedPermutation{
 			if( score_diff >= 0 ){
 				do_update = true;
 			}else{
-				// double diff_double = 1.0 * score_diff / constraints->get_K();
-				// double temprature = temprature_begin + (template_end - temprature_begin) * t / max_t;
-				// double prob = exp( diff_double / temprature);
-				// do_update = randxor() < prob * RANDMAX;
-				// // LOG("prob", prob, do_update);
-				// metrics_last_updated_by_probability = t;
+				double diff_double = 1.0 * score_diff;
+				double temprature = temprature_begin + (template_end - temprature_begin) * time_elapsed() / TIME_LIMIT;
+				double prob = exp( diff_double / temprature);
+				do_update = randxor() < prob * RANDMAX;
+//				LOG("prob", prob, do_update);
+				metrics_last_updated_by_probability = t;
 			}
 
 			if(!do_update){
@@ -383,10 +375,10 @@ public:
 		reset_timer();
 		constraints = new Constraints(constraints_str, N);
 		auto solution = initial_solution(N);
-		// auto res = simulated_annealing(solution);
-		auto res = hill_climbing(solution);
-		ANALYSIS_LOG("final_score", res.real_score());
-		return res.output();
+		solution = hill_climbing(solution);
+		solution = simulated_annealing(solution);
+		ANALYSIS_LOG("final_score", solution.real_score());
+		return solution.output();
 	}
 
 
