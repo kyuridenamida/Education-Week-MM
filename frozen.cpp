@@ -8,7 +8,7 @@
 using namespace std;
 
 const int INF = 12345;
-const double TIME_LIMIT = 9.75;
+const double TIME_LIMIT = 9.75 * 3;
 
 const unsigned int RANDMAX = -1;
 
@@ -31,7 +31,7 @@ template <class T> ostream &operator<<(ostream &os, const vector<T> &v) {
 
 namespace Timer {
 bool is_started = false;
-unsigned long long int cycle_per_sec = 2700000000;
+unsigned long long int cycle_per_sec = 2800000000;
 unsigned long long int beginCycle;
 unsigned long long int get_cycle() {
   unsigned int low, high;
