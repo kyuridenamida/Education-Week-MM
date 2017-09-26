@@ -25,32 +25,50 @@ template<class T> ostream& operator<<(ostream& os, const vector<T>& v)
 	return os;  
 } 
 
-namespace Timer{
-	bool is_started = false;
-	unsigned long long int cycle_per_sec = 2800000000;
-	unsigned long long int beginCycle;
-	unsigned long long int get_cycle()
-	{
+class Timer{
+	// Appropriate cycle_per_sec
+	//  2800000000: Topcoder Marathon Match (Sep 25th 2017)
+	
+	const static unsigned long long int cycle_per_sec = 2800000000;
+	unsigned long long int beginCycle;	
+	double time_limit;
+	bool is_time_limit_existing;
+public:
+	Timer(double time_limit) : time_limit(time_limit){
+		beginCycle = get_cycle();
+		is_time_limit_existing = true;
+	}
+	Timer(){
+		beginCycle = get_cycle();
+		is_time_limit_existing = false;
+	}
+
+	unsigned long long int get_cycle(){
 	  unsigned int low, high;
 	  __asm__ volatile ("rdtsc" : "=a" (low), "=d" (high));
 	  return ((unsigned long long int)low) | ((unsigned long long int)high << 32);
 	}
-	double time_elapsed()
-	{
-		assert(is_started);
+
+	double time_elapsed(){
 		return (double)(get_cycle() - beginCycle) / cycle_per_sec;
 	}
-	void reset_timer(){
-		is_started = true;
-		beginCycle = get_cycle();
+
+	double get_time_limit(){
+		return time_limit;
 	}
-	bool is_TLE(double limit){
-		assert(is_started);
-		return time_elapsed() >= limit;
+
+	double relative_time_elapsed(){
+		return time_elapsed() / get_time_limit();
+	}
+
+	bool is_TLE(){
+		assert(is_time_limit_existing);
+		return time_elapsed() >= time_limit;
 	}
 };
-using namespace Timer;
 
+
+Timer *timer_logging = new Timer();
 
 template<class T> string unpack(const T &v){
 	stringstream ss;
@@ -66,7 +84,7 @@ template<class T, class ...Args> string unpack(const T &v, Args... args)
 
 template<class ...Args> void log(int line, Args... args){
 	char time[16];
-	sprintf(time, "%2.4f", time_elapsed());
+	sprintf(time, "%2.4f", timer_logging->time_elapsed());
 	cerr << time << "s " << unpack(args...);
 	if( line >= 0 ){
 		cerr << " (line " << line << ")";
@@ -241,7 +259,8 @@ public:
 
 class ConstrainedPermutation{
 	Constraints *constraints;
-	
+	Timer *timer;
+
 	Solution initial_solution(int N){
 		vector< pair<int,int> > height(N);
 		vector<int> random_array(N);
@@ -265,10 +284,10 @@ class ConstrainedPermutation{
 
 	Solution hill_climbing(Solution solution){
 		int t = 0;
-		ANALYSIS_LOG("hc_start_time", time_elapsed());
+		ANALYSIS_LOG("hc_start_time", timer->time_elapsed());
 		Solution best_solution = solution;
 		int fail_count = 0;
-		while( !is_TLE(TIME_LIMIT) && fail_count < constraints->get_N() ){
+		while( !timer->is_TLE() && fail_count < constraints->get_N() ){
 			int pi = t % constraints->get_N();
 			int prev_value = solution.perm[pi];
 			WeightedRange best_value_range = solution.best_range(pi);
@@ -294,7 +313,7 @@ class ConstrainedPermutation{
 			t++;
 		}
 		ANALYSIS_LOG("hc_final_t", t);
-		ANALYSIS_LOG("hc_finish_time", time_elapsed());
+		ANALYSIS_LOG("hc_finish_time", timer->time_elapsed());
 		return best_solution;
 	}
 
@@ -303,8 +322,7 @@ class ConstrainedPermutation{
 		const double temperature_begin = 0.2;
 		const double template_end = 0.1;
 
-		ANALYSIS_LOG("max_t", max_t);
-		ANALYSIS_LOG("sa_start_time", time_elapsed());
+		ANALYSIS_LOG("sa_start_time", timer->time_elapsed());
 
 		int t = 0;
 		Solution best_solution = solution;
@@ -312,7 +330,7 @@ class ConstrainedPermutation{
 		int metrics_last_updated = 0;
 		int metrics_last_updated_by_probability = 0;
 		
-		while( !is_TLE(TIME_LIMIT)){
+		while( !timer->is_TLE()){
 			int pi = randxor() % constraints->get_N();
 			int new_value = randxor();
 			int prev_value = solution.perm[pi];
@@ -326,7 +344,7 @@ class ConstrainedPermutation{
 				do_update = true;
 			}else{
 				double diff_double = 1.0 * score_diff;
-				double temperature = temperature_begin + (template_end - temperature_begin) * time_elapsed() / TIME_LIMIT;
+				double temperature = temperature_begin + (template_end - temperature_begin) * timer->relative_time_elapsed();
 				double prob = exp( diff_double / temperature);
 				do_update = randxor() < prob * RANDMAX;
 				metrics_last_updated_by_probability = t;
@@ -337,7 +355,7 @@ class ConstrainedPermutation{
 			}
 			if( best_solution.score < solution.score ){
 				best_solution = solution;
-				DIZZY_ANALYSIS_LOG("updated",solution.real_score(), t, time_elapsed());
+				DIZZY_ANALYSIS_LOG("updated",solution.real_score(), t, timer->time_elapsed());
 				LOG("update!", score_diff, solution.score, constraints->get_K(), solution.real_score() , "(", t, ")");
 				metrics_last_updated = t;
 			}
@@ -346,14 +364,13 @@ class ConstrainedPermutation{
 		ANALYSIS_LOG("last_updated", metrics_last_updated);
 		ANALYSIS_LOG("last_updated_by_probability", metrics_last_updated_by_probability);
 		ANALYSIS_LOG("final_t", t);
-		ANALYSIS_LOG("sa_finish_time", time_elapsed());
+		ANALYSIS_LOG("sa_finish_time", timer->time_elapsed());
 		return best_solution;
 	}
 
 public:
 	vector<int> permute(int N,vector<string> constraints_str){
-		
-		reset_timer();
+		timer = new Timer(TIME_LIMIT);
 		constraints = new Constraints(constraints_str, N);
 		auto solution = initial_solution(N);
 		solution = hill_climbing(solution);
@@ -367,7 +384,6 @@ public:
 
 #ifdef LOCAL
 int main(int argv, char *argc[]){
-	reset_timer(); // bad code
 	ANALYSIS_LOG("compiled_datetime", __DATE__, __TIME__, "CDT");
 	ANALYSIS_LOG("sourcefile_name", __FILE__);
 	ANALYSIS_LOG("compiler_version", __VERSION__);
