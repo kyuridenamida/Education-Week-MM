@@ -1,6 +1,6 @@
 set -eu
 PROG_PATH=/tmp/main.out
-rm $PROG_PATH
+rm -f $PROG_PATH
 g++ main.cpp -o $PROG_PATH -O3 -std=c++14 -DNO_OUTPUT -DLOCAL -DANALYSIS
 
 datetime=`date +"%Y-%m-%d-%H-%M-%S"`
