@@ -9,7 +9,18 @@ Standings: https://community.topcoder.com/longcontest/?module=ViewStandings&rd=1
 Analysis for my solution: https://docs.google.com/spreadsheets/d/1-PTRg_Xf_O9qzIGzw3JzSuv0gfLR_74fFDSvBZ4VhoA/edit?usp=sharing
 Pre & final results: https://docs.google.com/spreadsheets/d/1x_Fw4YIKTBzckW3tP_3StDez_oGyzaOa1njbBd9K4EU/edit?usp=sharing
 
+## Score transition
+1. 806455.16 HC (with incremental update) ([#6](https://github.com/kyuridenamida/Education-Week-MM/issues/6))
+2. 820439.30 SA(\*) (with a sorted array as the initial solution) ([#23](https://github.com/kyuridenamida/Education-Week-MM/issues/23))
+3. 822360.59 HC (with changing one element instead of swapping a pair) ([#28](https://github.com/kyuridenamida/Education-Week-MM/issues/28))
+4. 822365.58 HC (the same as 3. except that used time increased 8.75s to 9.4s) ([#31](https://github.com/kyuridenamida/Education-Week-MM/issues/31))
+5. 822393.73 SA (with tuned parameters and changed timer) ([#37](https://github.com/kyuridenamida/Education-Week-MM/issues/37))
+
+(\*) To use SA was not important at that time (refer to [#24](https://github.com/kyuridenamida/Education-Week-MM/issues/24))
+
+
 ## Key Observations
+- Actually sorted array [0,1,...,n-1] is very good initial solution.
 - Encoding magnitude relations between pairs of position to a directed graph. 
 - Encoding permutation as real numbers of 32(or anything enough)-bit integers. ([#26](https://github.com/kyuridenamida/Education-Week-MM/issues/26))
   - This makes transition more flexible.
@@ -35,8 +46,8 @@ Pre & final results: https://docs.google.com/spreadsheets/d/1x_Fw4YIKTBzckW3tP_3
 ## Scripts
 - `localtest.sh` tests `main.cpp` with seed 1 to 100 and store the logs for each test case.
 - `run.sh exec_file input_file` is for testing `exec_file` with `input_file`. The log will be stored into `./log/` and `./output` by default. You can change the directory by specifying `LOG_DIR` and `OUTPUT_DIR`.
-- `input_generator.sh` generates input files of seed 1 to 100 to `test_inputs/` directory.
+- `input_generator.sh` generates input files of seed 1 to 100 to `./test_inputs/` directory.
 - `generate_submittable_code.sh` generates the auto formatted code for main.cpp and save as `frozen.cpp`.
-- `recent_log.sh` is just a useful command to see the results for recent localtest.
-- `build_result_from_log.sh` converts a raw log into a structured csv file.
-- `csv_builder.py` is a faster way to build structured csv file, but no longer used due to its low flexibility.
+- `build_result_from_log.sh log_dir` converts all raw logs in `log_dir` into a structured csv file.
+- `recent_log.sh` is just a useful command to build a structured csv file for the recent local test.
+- `csv_builder.py log_file` is a faster way to build structured csv file, but no longer used due to its low flexibility.
