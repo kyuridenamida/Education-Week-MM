@@ -4,10 +4,12 @@ I mainly tried to solve this problem based on Hill Climbing (HC) approach and Si
 
 ## Resources
 Problem: https://community.topcoder.com/longcontest/?module=ViewProblemStatement&rd=16997&pm=14690
+
 Standings: https://community.topcoder.com/longcontest/?module=ViewStandings&rd=16997
 
 ## Google spreadsheets
 Analysis for my solution: https://docs.google.com/spreadsheets/d/1-PTRg_Xf_O9qzIGzw3JzSuv0gfLR_74fFDSvBZ4VhoA/edit?usp=sharing
+
 Pre & final results: https://docs.google.com/spreadsheets/d/1x_Fw4YIKTBzckW3tP_3StDez_oGyzaOa1njbBd9K4EU/edit?usp=sharing
 
 ## Score transition
