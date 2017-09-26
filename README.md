@@ -1,5 +1,6 @@
 # Education-Week-MM
 This repository is my history of the development of a program for [Education Week MM](https://community.topcoder.com/longcontest/?module=ViewProblemStatement&rd=16997&pm=14690).
+I mainly tried to solve this problem based on Hill Climbing (HC) approach and Simulated Annealing (SA) approach.
 
 ## Resources
 Problem: https://community.topcoder.com/longcontest/?module=ViewProblemStatement&rd=16997&pm=14690
