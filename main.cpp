@@ -7,10 +7,7 @@
 #include <algorithm>
 #include <cmath>
 using namespace std;
-
-const int INF = 12345;
 const double TIME_LIMIT = 9.75;
-
 const unsigned int RANDMAX = -1;
 
 unsigned int randxor()
@@ -178,6 +175,7 @@ public:
 	int real_score(){
 		return (int)(1000000ll * score / constraints->raw.size()); 
 	}
+
 	Solution(vector<int> perm, Constraints *constraints) : perm(perm), constraints(constraints){
 		score = evaluate();
 	}
@@ -208,19 +206,17 @@ public:
 	}
 
 	WeightedRange best_range(int pi){
+		// This function has a bug for the occurence of the same values, but it happens with ignorably small probability.
+		// best_range(pi) := maximum value range for pi
 		if( constraints->graph_size[pi] + constraints->reversed_graph_size[pi] == 0 ){
 			return WeightedRange(-INT_MIN,INT_MAX,0);
 		}
-		// this has bug for the occurence of same values
-		// best_range(pi) := maximum value range for pi
 		vector< pair<int,int> > items;
 		for(int i = 0 ; i < constraints->graph_size[pi] ; i++){
 			items.push_back({perm[constraints->graph[pi][i]],-1});
-			// LOG("x <", perm[constraints->graph[pi][i]]);
 		}
 		for(int i = 0 ; i < constraints->reversed_graph_size[pi] ; i++){
 			items.push_back({perm[constraints->reversed_graph[pi][i]]+1,+1});
-			// LOG(perm[constraints->reversed_graph[pi][i]], "< x");
 		}
 		sort(items.begin(),items.end());
 		int sum = constraints->graph_size[pi];
@@ -231,7 +227,6 @@ public:
 				res = WeightedRange(items[i].first, i+1 < items.size() ? items[i+1].first : INT_MAX, sum);
 			}
 		}
-		// LOG("log: ", "[", res.left, "," , res.right, ")",res.weight);
 		return res;
 	}
 
@@ -266,10 +261,6 @@ class ConstrainedPermutation{
 			p[height[i].second] = random_array[i];
 
 		return Solution(p, constraints);
-	}
-
-	double predicted_max_t(double K){
-		return 1.044e9 * pow(K,-0.398695);
 	}
 
 	Solution hill_climbing(Solution solution){
@@ -312,10 +303,10 @@ class ConstrainedPermutation{
 		const double temperature_begin = 0.2;
 		const double template_end = 0.1;
 
-		const int max_t = predicted_max_t(constraints->get_K());
 		ANALYSIS_LOG("max_t", max_t);
-		int t = 0;
 		ANALYSIS_LOG("sa_start_time", time_elapsed());
+
+		int t = 0;
 		Solution best_solution = solution;
 		
 		int metrics_last_updated = 0;
@@ -329,17 +320,8 @@ class ConstrainedPermutation{
 			if( t % 1000 == 0 ){
 				DIZZY_ANALYSIS_LOG("score_incomplete", solution.real_score(), t, time_elapsed());
 			}
-			// LOG("score_before", solution.score, "current[", solution.perm, "]", vi, vj);
 			int score_diff = solution.update(pi,new_value);
-			// LOG("score_diff", score_diff);
-			// LOG("score_after", solution.score, "next[", solution.perm, "]", vi, vj);
-			// LOG("true_score", solution.evaluate());
-
-			// assert(solution.score == solution.evaluate());
 			bool do_update = false;
-			if( score_diff == 0 ){
-				// ANALYSIS_LOG("no_score_change_happen",solution.real_score(), time_elapsed());
-			}
 			if( score_diff >= 0 ){
 				do_update = true;
 			}else{
@@ -347,7 +329,6 @@ class ConstrainedPermutation{
 				double temperature = temperature_begin + (template_end - temperature_begin) * time_elapsed() / TIME_LIMIT;
 				double prob = exp( diff_double / temperature);
 				do_update = randxor() < prob * RANDMAX;
-//				LOG("prob", prob, do_update);
 				metrics_last_updated_by_probability = t;
 			}
 
@@ -364,7 +345,6 @@ class ConstrainedPermutation{
 		}
 		ANALYSIS_LOG("last_updated", metrics_last_updated);
 		ANALYSIS_LOG("last_updated_by_probability", metrics_last_updated_by_probability);
-		
 		ANALYSIS_LOG("final_t", t);
 		ANALYSIS_LOG("sa_finish_time", time_elapsed());
 		return best_solution;
