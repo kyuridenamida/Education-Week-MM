@@ -91,10 +91,10 @@ template<class ...Args> void log(int line, Args... args){
 	#define ANALYSIS_LOG(...)
 #endif
 
-#ifdef ENABLE_FIZZY_ANALYSIS
-	#define FIZZY_ANALYSIS_LOG(...) log(-1,"[ANALYSIS]",__VA_ARGS__)
+#ifdef ENABLE_DIZZY_ANALYSIS
+	#define DIZZY_ANALYSIS_LOG(...) log(-1,"[ANALYSIS]",__VA_ARGS__)
 #else
-	#define FIZZY_ANALYSIS_LOG(...)
+	#define DIZZY_ANALYSIS_LOG(...)
 #endif
 
 
@@ -284,7 +284,7 @@ class ConstrainedPermutation{
 			int new_value = randxor() % (best_value_range.right - best_value_range.left) + best_value_range.left;
 
 			if( t % 1000 == 0 ){
-				FIZZY_ANALYSIS_LOG("hc_score_incomplete", solution.real_score(), t, time_elapsed());
+				DIZZY_ANALYSIS_LOG("hc_score_incomplete", solution.real_score(), t, time_elapsed());
 			}
 
 			int score_diff = solution.update(pi,new_value);
@@ -292,7 +292,7 @@ class ConstrainedPermutation{
 			if( score_diff > 0 ){
 				if( best_solution.score < solution.score ){
 					best_solution = solution;
-					FIZZY_ANALYSIS_LOG("hc_updated",solution.real_score(), t, time_elapsed());
+					DIZZY_ANALYSIS_LOG("hc_updated",solution.real_score(), t, time_elapsed());
 					LOG("hc_update!", score_diff, solution.score, constraints->get_K(), solution.real_score() , "(", t, ")");
 				}
 				fail_count = 0;
@@ -309,7 +309,7 @@ class ConstrainedPermutation{
 
 	Solution simulated_annealing(Solution solution){
 
-		const double temprature_begin = 0.2;
+		const double temperature_begin = 0.2;
 		const double template_end = 0.1;
 
 		const int max_t = predicted_max_t(constraints->get_K());
@@ -327,7 +327,7 @@ class ConstrainedPermutation{
 			int prev_value = solution.perm[pi];
 
 			if( t % 1000 == 0 ){
-				FIZZY_ANALYSIS_LOG("score_incomplete", solution.real_score(), t, time_elapsed());
+				DIZZY_ANALYSIS_LOG("score_incomplete", solution.real_score(), t, time_elapsed());
 			}
 			// LOG("score_before", solution.score, "current[", solution.perm, "]", vi, vj);
 			int score_diff = solution.update(pi,new_value);
@@ -344,8 +344,8 @@ class ConstrainedPermutation{
 				do_update = true;
 			}else{
 				double diff_double = 1.0 * score_diff;
-				double temprature = temprature_begin + (template_end - temprature_begin) * time_elapsed() / TIME_LIMIT;
-				double prob = exp( diff_double / temprature);
+				double temperature = temperature_begin + (template_end - temperature_begin) * time_elapsed() / TIME_LIMIT;
+				double prob = exp( diff_double / temperature);
 				do_update = randxor() < prob * RANDMAX;
 //				LOG("prob", prob, do_update);
 				metrics_last_updated_by_probability = t;
@@ -356,7 +356,7 @@ class ConstrainedPermutation{
 			}
 			if( best_solution.score < solution.score ){
 				best_solution = solution;
-				FIZZY_ANALYSIS_LOG("updated",solution.real_score(), t, time_elapsed());
+				DIZZY_ANALYSIS_LOG("updated",solution.real_score(), t, time_elapsed());
 				LOG("update!", score_diff, solution.score, constraints->get_K(), solution.real_score() , "(", t, ")");
 				metrics_last_updated = t;
 			}
