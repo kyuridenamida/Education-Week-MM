@@ -206,8 +206,8 @@ public:
 	}
 
 	WeightedRange best_range(int pi){
-		// This function has a bug for the occurence of the same values, but it happens with ignorably small probability.
 		// best_range(pi) := maximum value range for pi
+		// This function has a bug for the occurence of the same values, but it happens with ignorably small probability.
 		if( constraints->graph_size[pi] + constraints->reversed_graph_size[pi] == 0 ){
 			return WeightedRange(-INT_MIN,INT_MAX,0);
 		}
@@ -383,10 +383,10 @@ int main(int argv, char *argc[]){
 		ANALYSIS_LOG("K", K);
 		vector<string> constraints;
 		for(int i = 0 ; i < K ; i++){
-			int vi,vj;
-			in >> vi >> vj;
+			int pi,pj;
+			in >> pi >> pj;
 			stringstream ss;
-			ss << vi << " " << vj;
+			ss << pi << " " << pj;
 			constraints.push_back(ss.str());
 		}
 		auto res = ConstrainedPermutation().permute(N,constraints);
